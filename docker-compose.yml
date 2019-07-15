@@ -1,0 +1,93 @@
+# Current docker latest stable version
+version: '3'
+
+# List of services that are going to be installed once it is run
+services:
+  # Nginx and The App service
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+      args:
+        - APP_ENV=${APP_ENV}
+    ports:
+      - '80:80'
+    # Keeps refreshing every changes happen in particular directories
+    # We need to be kept updated with the app directory
+    volumes:
+      - './src:/var/www/html'
+      - './etc/nginx/logs:/var/log/nginx'
+    # Restart the server if it's crashing
+    restart: always
+    depends_on:
+      - php
+      - mysql
+    links:
+      - php
+    container_name: 'nginx'
+  # PHP-FPM 7.3 service
+  php:
+    build:
+      context: .
+      dockerfile: php.Dockerfile
+      args:
+        - PHP_OPCACHE_VALIDATE_TIMESTAMPS=${PHP_OPCACHE_VALIDATE_TIMESTAMPS}
+    ports:
+      - 9000
+    volumes:
+      - './src:/var/www/html'
+      - './etc/php/logs:/var/log/php-fpm'
+    restart: always
+    # Environment vars for the App
+    env_file:
+      - .env
+    container_name: 'php-fpm'
+  # Redis 5 Service
+  redis:
+    build:
+      context: .
+      dockerfile: redis.Dockerfile
+      args:
+        - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - 6379
+    restart: always
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    container_name: 'redis'
+  # MySQL 8.0 service
+  # Version 8.0 is the same version as RDS on aws for production
+  mysql:
+    build:
+      context: .
+      dockerfile: mysql.Dockerfile
+      args:
+        - MYSQL_ROOT_PASSWORD=${DB_ROOTPASSWORD}
+        - MYSQL_USER=${DB_USERNAME}
+        - MYSQL_PASSWORD=${DB_PASSWORD}
+        - MYSQL_DATABASE=${DB_DATABASE}
+        - TZ=${APP_TIMEZONE}
+    ports:
+      - 3306
+    restart: always
+    volumes:
+      - './etc/mysql/db-data:/var/lib/mysql'
+    container_name: 'mysql'
+    depends_on:
+      - php
+    links:
+      - php
+  # phpmyadmin service
+  # Open it through host:306
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - mysql
+    ports:
+      - '306:80'
+    restart: always
+    environment:
+      - PMA_HOST=${DB_HOST}
+      - PMA_PORT=${DB_PORT}
+      - PHP_UPLOAD_MAX_FILESIZE=100MB
+    container_name: 'phpmyadmin'
