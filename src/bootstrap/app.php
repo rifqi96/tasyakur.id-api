@@ -21,9 +21,12 @@ $app = new Laravel\Lumen\Application(
     dirname(__DIR__)
 );
 
-// $app->withFacades();
+$app->withFacades();
 
-// $app->withEloquent();
+$app->withEloquent();
+
+// Load auth config files
+$app->configure('auth');
 
 /*
 |--------------------------------------------------------------------------
@@ -61,9 +64,14 @@ $app->singleton(
 //     App\Http\Middleware\ExampleMiddleware::class
 // ]);
 
-// $app->routeMiddleware([
-//     'auth' => App\Http\Middleware\Authenticate::class,
-// ]);
+// Register laravel passport service provider
+$app->register(\Laravel\Passport\PassportServiceProvider::class);
+$app->register(\Dusterio\LumenPassport\PassportServiceProvider::class);
+
+$app->routeMiddleware([
+    'auth' => App\Http\Middleware\Authenticate::class,
+    'oauth_client' => \Laravel\Passport\Http\Middleware\CheckClientCredentials::class,
+]);
 
 /*
 |--------------------------------------------------------------------------
@@ -77,9 +85,25 @@ $app->singleton(
 */
 
 // $app->register(App\Providers\AppServiceProvider::class);
-// $app->register(App\Providers\AuthServiceProvider::class);
+$app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
 
+/**
+ * Register the configuration file
+ * 
+ */
+$app->configure('app');
+
+/**
+ * Register Mail Service Provider
+ * 
+ */
+$app->register(Illuminate\Mail\MailServiceProvider::class);
+$app->configure('mail');
+$app->alias('mailer', Illuminate\Mail\Mailer::class);
+$app->alias('mailer', Illuminate\Contracts\Mail\Mailer::class);
+$app->alias('mailer', Illuminate\Contracts\Mail\MailQueue::class);
+ 
 /*
 |--------------------------------------------------------------------------
 | Load The Application Routes
@@ -91,9 +115,14 @@ $app->singleton(
 |
 */
 
+/**
+ * Register laravel passport route
+ */
+Dusterio\LumenPassport\LumenPassport::routes($app->router, ['prefix' => 'api/oauth'] );
+
 $app->router->group([
     'namespace' => 'App\Http\Controllers',
-], function ($router) {
+], function ($router) use ($app) {
     require __DIR__.'/../routes/web.php';
 });
 

@@ -8,6 +8,9 @@ etc/php/logs/*
 # Log Files
 *.log
 
+# Key Files
+*.key
+
 # Env Files
 .env
 
