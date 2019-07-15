@@ -1,0 +1,35 @@
+.DS_Store
+
+# Docker Logs or Private Files
+etc/mysql/db-data/*
+etc/nginx/logs/*
+etc/php/logs/*
+
+# Log Files
+*.log
+
+# Env Files
+.env
+
+# Vendor
+/node_modules
+/vendor
+
+# Laravel's Miscellaneous
+/public/hot
+/public/storage
+/storage/*.key
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+
+# Eclipse's Miscellaneous
+.buildpath
+.project
+.settings
+
+# phpStorm's Miscellaneous
+.idea
+
+# vscodes' Miscellaneous
+.vscode
